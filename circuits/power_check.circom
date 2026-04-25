@@ -1,24 +1,23 @@
 pragma circom 2.0.0;
 
-template PowerCheck() {
-    signal input amount;      // Private: 실제 발전량
-    signal input threshold;   // Public: 최소 기준치
-    signal output isValid;    // Public: 결과 (1 or 0)
+include "node_modules/circomlib/circuits/poseidon.circom";
 
-    // amount > threshold 임을 확인하는 로직 (간단한 예시)
-    // 실제 구현 시에는 범위 검증 컴포넌트를 사용합니다.
+template PowerCheck() {
+    // Private inputs (증명자만 아는 값)
+    signal input amount;
+    
+    // Public inputs (검증자도 아는 값)
+    signal input threshold;
+    signal input merkleRoot; // 자바에서 넘겨받은 머클 루트
+
+    // 1. 수치 검증 로직 (예: 발전량이 0보다 큰가?)
     component gt = GreaterThan(32);
     gt.in[0] <== amount;
     gt.in[1] <== threshold;
+    gt.out === 1;
 
-    isValid <== gt.out;
+    // 2. 데이터 무결성 검증 (머클 루트와 매칭되는지 - 개념적)
+    // 실제로는 여기서 Merkle Proof(Path)를 입력받아 해싱 후 merkleRoot와 비교해야 함
 }
 
-// GreaterThan 등 기초 컴포넌트는 circomlib에서 가져오거나 직접 구현합니다.
-template GreaterThan(n) {
-    signal input in[2];
-    signal output out;
-    // ... (범위 검증 로직)
-}
-
-component main {public [threshold]} = PowerCheck();
+component main {public [threshold, merkleRoot]} = PowerCheck();
